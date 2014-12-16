@@ -1,0 +1,656 @@
+
+binary.ml,0
+let make k =make4,39
+let int64_bytesize = 8int64_bytesize7,69
+let int32_bytesize = 4int32_bytesize8,92
+let int16_bytesize = 2int16_bytesize9,115
+let output_bytes chan bytes =output_bytes11,139
+let set_binstring_of_int64 x b =set_binstring_of_int6414,197
+let set_binstring_of_float f b =set_binstring_of_float19,364
+let set_binstring_of_int32 x b =set_binstring_of_int3223,462
+let set_binstring_of_int16 x b =set_binstring_of_int1628,629
+let set_binstring_of_int x b =set_binstring_of_int33,741
+let output_int16 f i =output_int1637,830
+let output_int32 f i =output_int3242,936
+let output_int64 f i =output_int6447,1042
+
+bsdf.ml,0
+let eps_phong = 1e-3eps_phong50,2396
+type truetypetruetype52,2418
+type falsetypefalsetype53,2432
+type componentProbabilities = {componentProbabilities55,2448
+let nullProbabilities = {nullProbabilities62,2567
+type events = events69,2668
+type (*'a *) t = {t82,2965
+let invalid () = {invalid93,3632
+let isValid self = self.mMaterialID >= 0isValid104,3907
+let isDelta self = self.mIsDeltaisDelta105,3948
+let continuationProb self = self.mContinuationProbcontinuationProb106,3981
+let cosThetaFix self = V.get self.mLocalDirFix 2cosThetaFix107,4032
+let worldDirFix self = Frame.toWorld self.mFrame self.mLocalDirFixworldDirFix108,4081
+let pdfDiffuse self aMaterial aLocalDirGen oDirectPdfW oReversePdfW =pdfDiffuse115,4328
+let pdfPhong self aMaterial aLocalDirGen oDirectPdfW oReversePdfW =pdfPhong126,4777
+let pdf self ?(aEvalRevPdf=false) aScene aWorldDirGen =pdf149,5704
+type samplingMethod_result = {samplingMethod_result165,6497
+let null_sampling = {null_sampling171,6602
+let sampleDiffuse self aMaterial aRndTuple pdfW =sampleDiffuse178,6713
+let samplePhong self aMaterial aRndTuple pdfW =samplePhong191,7130
+let sampleReflect self aMaterial aRndTuple pdfW =sampleReflect216,8071
+let sampleRefract self aMaterial aRndTuple pdfW =sampleRefract229,8544
+type evaluating = {evaluating272,10098
+let null_evaluating = {null_evaluating278,10191
+type evaluate_result = {evaluate_result284,10288
+let null_eval oLocalDirGen = {null_eval292,10432
+let evaluateDiffuse self aMaterial aLocalDirGen oDirectPdfW oReversePdfW =evaluateDiffuse302,10584
+let evaluatePhong self aMaterial aLocalDirGen oDirectPdfW oReversePdfW =evaluatePhong327,11391
+let evaluate self aScene aWorldDirGen : evaluate_result =evaluate371,13009
+let albedoDiffuse aMaterial =albedoDiffuse394,13868
+let albedoPhong aMaterial =albedoPhong397,13952
+let albedoReflect aMaterial =albedoReflect400,14032
+let albedoRefract aMaterial =albedoRefract403,14115
+type sample_result = {sample_result418,14671
+let null_sample = {null_sample426,14819
+let sample self aScene aRndTriplet =sample435,14977
+let getComponentProbabilities self aMaterial (* oProbabilities *) =getComponentProbabilities479,16930
+let setup mFixIsLight aRay aIsect aScene =setup512,18386
+let make mFixIsLight aRay aIsect aScene =make530,19288
+
+camera.ml,0
+type t = {t3,13
+let position self = self.mPositionposition12,175
+let forward self = self.mForwardforward13,210
+let resolution self = self.mResolutionresolution14,243
+let rasterToWorldMatrix self = self.mRasterToWorldrasterToWorldMatrix15,282
+let worldToRasterMatrix self = self.mWorldToRasterworldToRasterMatrix16,333
+let imagePlaneDist self = self.mImagePlaneDistimagePlaneDist17,384
+let v4_of_v3 v w =v4_of_v319,432
+let perspective aFov aNear aFar =perspective23,509
+let make aPosition aForward aUp aResolution (aHorizontalFOV : float) =make39,1070
+let rasterToIndex camera aPixelCoords =rasterToIndex97,3118
+let indexToRaster camera aPixelIndex =indexToRaster100,3246
+let rasterToWorld camera aRasterXY : V.t =rasterToWorld105,3455
+let worldToRaster camera aWorldPos =worldToRaster108,3558
+let checkRaster camera aRasterPos =checkRaster113,3735
+let generateRay camera aRasterXY =generateRay118,3958
+
+config.ml,0
+module Algorithm = structAlgorithm3,13
+  type t =t5,40
+  let each = [ each14,229
+  let name = functionname24,427
+  let acronym = functionacronym33,862
+  let default = VertexConnectionMergingdefault42,1179
+  let of_acronym = functionof_acronym44,1220
+  let of_int = functionof_int54,1529
+type 'a render = {render66,1814
+type 'a setup = setup71,1891
+type ('a,'f) t = {t75,1949
+let resolution config = V2i.of_tuple config.mResolutionresolution91,2304
+let sceneConfigs =sceneConfigs94,2388
+let default_setup =  {default_setup102,2715
+let default = {default107,2832
+let createRenderer (aConfig : ('a,'f) t) aSetup aSeed =createRenderer124,3270
+let defaultFilename aSceneConfig (aScene : 'a Scene.t) aAlgorithm =defaultFilename151,5200
+let report_desc =report_desc157,5450
+let usageMsg pname = pname ^ ": small implementation of Vertex Connection Merging (VCM) Rendering algorithm"usageMsg165,5889
+let parseCommandLine () = parseCommandLine168,6000
+
+eyelight.ml,0
+module Make (Rng : Rng.S) = structMake27,1236
+  class eyelight aScene pathLengths aSeed =eyelight29,1272
+    method runIteration : int -> unit = fun aIteration ->runIteration36,1423
+  let renderer aScene pathLengths aSeed =renderer69,2759
+
+framebuffer.ml,0
+type t = {t3,13
+let getPixel self aSample =getPixel10,102
+let addColor self aSample aColor =addColor25,514
+let clone self = {clone38,999
+let update_all f a =update_all43,1123
+let clear self =clear48,1215
+let setup aResolution =setup51,1281
+let add self aOther =add62,1537
+let scale self aScale =scale66,1688
+let totalLuminance self =totalLuminance71,1860
+module B = BinaryB77,2039
+let savePPM self ?(aGamma=1.) aFilename =savePPM79,2058
+let savePFM self aFilename =savePFM99,2652
+type uint32 = int32uint32121,3272
+type int16 = intint16122,3292
+type bmpHeader = {bmpHeader124,3310
+let header_size =header_size143,4139
+let make_header mResX mResY  =make_header146,4205
+let write_header out h =write_header164,4765
+let saveBMP self ?(aGamma=1.) aFilename =saveBMP180,5289
+let saveHDR self aFilename =saveHDR206,6173
+
+frame.ml,0
+let unit0 = v3_of_tuple (1.,0.,0.)unit03,13
+let unit1 = v3_of_tuple (0.,1.,0.)unit14,48
+let unit2 = v3_of_tuple (0.,0.,1.)unit25,83
+type t = {t8,147
+let identity () = {identity14,203
+let make mX mY mZ = {make20,268
+let setFromZ z =setFromZ25,310
+let toWorld self a =toWorld37,542
+let toLocal self a =toLocal43,693
+let binormal self = self.mXbinormal46,780
+let tangent self = self.mYtangent47,808
+let normal self = self.mZnormal48,835
+
+geometry.ml,0
+module type T = sigT3,13
+    type tt4,33
+module Triangle = structTriangle10,219
+  type t = {t12,245
+  let make v1 v2 v3 i = {make18,324
+  let intersect triangle aRay oResult =intersect24,451
+  let intersectP = intersectintersectP44,1233
+  let growBB triangle (aoBBoxMin,aoBBoxMax) =growBB46,1263
+module Sphere = structSphere59,1762
+  type t = {t61,1786
+  let make center radius matID = {center; radius; matID}make67,1860
+  let intersect sphere aRay oResult =intersect69,1918
+  let intersectP = intersectintersectP100,3145
+  let growBB sphere (aoBBoxMin,aoBBoxMax) =growBB102,3175
+type t = Triangle of Triangle.t | Sphere of Sphere.t | List of t listt124,3875
+let rec intersect self ray result =intersect126,3946
+and intersectList l ray result =intersectList131,4137
+let rec intersectP self ray result =intersectP144,4436
+and intersectListP l ray result =intersectListP149,4631
+let rec growBB x bb =growBB159,4846
+and growBBList l bb =growBBList164,4987
+
+hashgrid.ml,0
+module V3i = Gmaths.Vec3.IntV3i3,13
+module A = ArrayA5,43
+type t = {t7,61
+let bbMin h    = h.mBBoxMin  bbMin19,276
+let bbMax h    = h.mBBoxMax  bbMax20,306
+let indices h    = h.mIndices  indices21,336
+let cellEnds h   = h.mCellEnds cellEnds22,368
+let radius h       = h.mRadius      radius24,401
+let radiusSqr h    = h.mRadiusSqr   radiusSqr25,438
+let cellSize h     = h.mCellSize    cellSize26,475
+let invCellSize h  = h.mInvCellSizeinvCellSize27,512
+let resize a n d =resize29,549
+let reserve h n =reserve38,712
+let getCellRange self aCellIndex =getCellRange42,794
+let getCellIndexFromCoord mCellEnds aCoord =getCellIndexFromCoord47,990
+let getCellIndexFromPoint mBBoxMin mInvCellSize mCellEnds aPoint =getCellIndexFromPoint52,1191
+module type PARTICLE = sigPARTICLE59,1518
+    type tt60,1545
+module type QUERY = sigQUERY64,1592
+    module Particle : PARTICLEParticle66,1617
+    type tt68,1649
+module type S =S74,1739
+  module Particle : PARTICLEParticle76,1759
+  type queryquery77,1788
+module Make (Query : QUERY) : S with module Particle = Query.ParticleMake82,1906
+                                 and type query = Query.t = structquery83,1976
+  module Particle = Query.ParticleParticle85,2044
+  type query = Query.tquery87,2080
+  let build aParticles mRadius =build89,2104
+  let process self aParticles aQuery =process168,4716
+
+htmlWriter.ml,0
+type borderColor =borderColor2,2
+type t = {t7,50
+let make aFileName aAlgorithmCount = {make14,187
+let close doc =close24,466
+let writeHeader doc =writeHeader217,12618
+let (|<) doc str = doc220,12674
+let (|<%) doc i =doc223,12741
+let addScene doc aSceneName =addScene226,12820
+let makeMessage fmt =makeMessage235,13119
+let addRendering doc ?(aBorderColor = None) ?(aOtherInfo = "") aMethodName aFileName aTime =addRendering238,13163
+let addFourWaySplit doc aMethodFilesBordersNames aSize =addFourWaySplit276,14838
+
+isect.ml,0
+type t = {t3,13
+let default = {default10,299
+let make dist matID lightID normal = make17,390
+let dist i = i.distdist20,462
+let set_dist i dist = { i with dist }set_dist21,482
+let matID i = i.matIDmatID22,520
+let lightID i = i.lightIDlightID23,542
+let normal i = i.normal normal24,568
+let dump ppf isect =dump26,594
+
+light.ml,0
+type illuminate_result = {illuminate_result3,13
+type emit_result = {emit_result12,227
+module type Abstract = sigAbstract21,415
+    type tt23,443
+module AreaLight = structAreaLight100,3144
+  type t = {t102,3171
+  let make aP0 aP1 aP2 i =make111,3296
+  let illuminate illuminate126,3609
+    let emit self aSceneSphere aDirRndTuple aPosRndTupleemit167,4990
+    let getRadiance getRadiance185,5929
+    let getRadianceEmission getRadianceEmission197,6283
+    let isFinite self = trueisFinite211,6826
+    let isDelta self = falseisDelta214,6938
+module DirectionalLight = structDirectionalLight220,7055
+  type t = {t222,7089
+  let make aDirection i = {make227,7151
+  let illuminateilluminate232,7244
+  let emitemit251,7807
+  let getRadiancegetRadiance278,8709
+  let getRadianceEmissiongetRadianceEmission285,8822
+  let isFinite self = falseisFinite293,9038
+  let isDelta self = trueisDelta296,9151
+module PointLight = structPointLight301,9264
+  type t = {t303,9292
+  let make aPosition i = {make308,9353
+  let illuminateilluminate313,9433
+  let emitemit332,10080
+  let getRadiancegetRadiance351,10594
+  let getRadianceEmissiongetRadianceEmission358,10707
+    let isFinite self = trueisFinite367,10930
+    let isDelta self = trueisDelta370,11042
+module BackgroundLight  = structBackgroundLight376,11158
+  type t = {t378,11192
+  let make s = {make383,11258
+  let illuminate illuminate388,11382
+  let emitemit418,12226
+  let getRadiancegetRadiance454,13592
+  let getRadianceEmissiongetRadianceEmission465,13912
+  let isFinite self = falseisFinite478,14451
+  let isDelta self = falseisDelta481,14584
+type t = t485,14617
+let illuminate = functionilluminate491,14772
+let emit = functionemit497,14996
+let getRadiance  = functiongetRadiance503,15190
+let getRadianceEmission = functiongetRadianceEmission509,15420
+let isFinite = functionisFinite515,15689
+let isDelta = functionisDelta521,15903
+
+material.ml,0
+type t = {t3,13
+let diffuseReflectance m = m.mDiffuseReflectancediffuseReflectance19,493
+let phongReflectance   m = m.mPhongReflectancephongReflectance20,542
+let phongExponent      m = m.mPhongExponentphongExponent21,589
+let mirrorReflectance  m = m.mMirrorReflectancemirrorReflectance22,633
+let ior                m = m.mIORior23,681
+let default = {default26,717
+let make ?diffuse_refl ?phong_refl ?(phong_exp=1.0) ?mirror_refl ?(ior=(-1.0)) () =make34,900
+
+math.ml,0
+let pi = 3.14159265358979pi25,1224
+let inv_pi = 1. /. piinv_pi26,1250
+module type SCALAR = sigSCALAR32,1369
+    type tt34,1395
+module Float : SCALAR with type t = float = structFloat45,1596
+  type t = floatt46,1647
+  let zero = 0.zero47,1664
+  let opp = ( ~-. )opp48,1680
+  let add = ( +. )add49,1700
+  let sub = ( -. )sub50,1719
+  let mul = ( *. )mul51,1738
+  let div = ( /. )div52,1757
+  let inv x = (1. /. x)inv53,1776
+  let sqrt = sqrtsqrt54,1800
+module Int : SCALAR with type t = int = structInt57,1823
+  type t = intt58,1870
+  let zero = 0zero59,1885
+  let opp = ( ~- )opp60,1900
+  let add = ( + )add61,1919
+  let sub = ( - )sub62,1937
+  let mul = ( * )mul63,1955
+  let div = ( / )div64,1973
+  let inv x = truncate (1. /. float x)inv65,1991
+  let sqrt x = truncate (sqrt @@ float x)sqrt66,2030
+module type V = sigV69,2077
+    type scalarscalar71,2098
+    type tt72,2114
+    type tupletuple73,2125
+module V2x (S : SCALAR) : V with type scalar = S.t and type tuple = S.t * S.t = structV2x94,2737
+  type scalar = S.tscalar96,2825
+  type t = scalar * scalart97,2845
+  type tuple = ttuple98,2872
+  let zero           = S.zero, S.zerozero100,2890
+  let null ()    : t = zeronull101,2928
+  let make x     : t = x, xmake102,2956
+  let get (x,y) : int -> scalar = function 0 -> x | 1 -> y | _ -> failwith "invalid index"get106,3099
+  let set (x,y) i v = match i withset107,3190
+  let map f (x,y) = f x, f ymap113,3316
+  let opp = map S.opp opp114,3345
+  let map2 op (x1,y1) (x2,y2) = op x1 x2, op y1 y2map2117,3395
+  let add = map2 S.addadd118,3446
+  let sub = map2 S.subsub119,3469
+  let mul = map2 S.mulmul120,3492
+  let div = map2 S.divdiv121,3515
+  let dot (x1,y1) (x2,y2) = S.add (S.mul x1 x2) (S.mul y1 y2)dot123,3539
+  let scale v x = mul v (make x)scale125,3602
+  let fold_left f a (x,y) = f (f a x) yfold_left127,3636
+  let fold_right f (x,y) a = f x (f y a)fold_right128,3676
+module V2f = V2x(Float)V2f132,3745
+module V2i = V2x(Int)V2i133,3769
+module type V3 = sigV3135,3792
+    type scalarscalar137,3814
+    type tt138,3830
+    type tuple = scalar * scalar * scalartuple139,3841
+    module V2 : V with type scalar = scalar and type tuple = scalar * scalarV2159,4476
+module V3x (S : SCALAR) : V3 with type scalar = S.t and type tuple = S.t * S.t * S.t = structV3x168,4675
+  type scalar = S.tscalar170,4770
+  type t = scalar * scalar * scalart171,4790
+  type tuple = ttuple172,4826
+  module V2 : V with type scalar = scalar and type tuple = scalar * scalar = V2x(S)V2174,4844
+  let zero       : t = S.zero, S.zero, S.zerozero176,4929
+  let null ()    : t = zeronull177,4975
+  let make x     : t = x, x, xmake178,5003
+  let get (x,y,z) : int -> scalar = function 0 -> x | 1 -> y | 2 -> z | _ -> failwith "invalid index"get182,5167
+  let set (x,y,z) i v = match i withset183,5269
+  let getXY v = let x,y,z = to_tuple v in V2.of_tuple (x,y)getXY189,5400
+  let ofXY v c = let x,y = V2.to_tuple v in (x,y,c)ofXY190,5460
+  let max ((x,y,z) : t) = max x (max y z)max191,5512
+  let isZero (x,y,z) = not (x <> S.zero || y <> S.zero || z <> S.zero)isZero193,5555
+  let map op (x1,y1,z1) = op x1, op y1, op z1map196,5647
+  let opp = map S.oppopp197,5693
+  let map2 op (x1,y1,z1) (x2,y2,z2) = op x1 x2, op y1 y2, op z1 z2map2200,5742
+  let add = map2 S.addadd201,5809
+  let sub = map2 S.subsub202,5832
+  let mul = map2 S.mulmul203,5855
+  let div = map2 S.divdiv204,5878
+  let dot (x1,y1,z1) (x2,y2,z2) = S.add (S.mul x1 x2) @@ S.add (S.mul y1 y2) (S.mul z1 z2)dot206,5902
+  let scale v x = mul v (make x)scale208,5994
+  let fold_left f a (x,y,z) = f (f (f a x) y) zfold_left210,6028
+  let fold_right f (x,y,z) a = f x (f y (f z a)) fold_right211,6076
+module V3i = V3x(Int)V3i215,6132
+module V3f = structV3f217,6155
+  let clone v = vclone221,6198
+  let lenSqr (v : t) = dot v vlenSqr223,6217
+  let length (v : t) = sqrt @@ lenSqr vlength224,6248
+  let cross v1 v2 =cross226,6331
+  let normalize v =normalize235,6544
+module V4x(S : SCALAR) : V with type scalar = S.t V4x241,6620
+                            and type tuple = S.t * S.t * S.t * S.t = structtuple242,6671
+  type scalar = S.tscalar244,6793
+  type t = scalar * scalar * scalar * scalart245,6813
+  type tuple = ttuple246,6858
+  module V3 : V3 with type scalar = scalar = V3x(S)V3248,6876
+  let zero       : t = S.zero, S.zero, S.zero, S.zerozero250,6929
+  let null ()    : t = zeronull251,6983
+  let make x     : t = x, x, x, xmake252,7011
+  let get (x,y,z,w) : int -> scalar = function 0 -> x | 1 -> y | 2 -> z | 3 -> w | _ -> failwith "invalid index"get256,7196
+  let set (x,y,z,w) i v = match i withset257,7309
+  let getXYZ (x,y,z,w) : V3.t = V3.of_tuple (x,y,z)getXYZ265,7470
+  let ofXYZ v3 = let x,y,z = V3.to_tuple v3 in (x,y,z,1.)ofXYZ266,7522
+  let max (x,y,z) = max x (max y z)max267,7580
+  let isZero (x,y,z,w) = not (x <> S.zero || y <> S.zero || z <> S.zero || w <> S.zero)isZero269,7617
+  let map op (x1,y1,z1,w1) = op x1, op y1, op z1, op w1map272,7726
+  let opp = map S.oppopp273,7782
+  let map2 op (x1,y1,z1,w1) (x2,y2,z2,w2) = op x1 x2, op y1 y2, op z1 z2, op w1 w2map2276,7831
+  let add = map2 S.addadd277,7914
+  let sub = map2 S.subsub278,7937
+  let mul = map2 S.mulmul279,7960
+  let div = map2 S.divdiv280,7983
+  let dot (x1,y1,z1,w1) (x2,y2,z2,w2) = S.add (S.mul x1 x2) @@ S.add (S.mul y1 y2) @@ S.add (S.mul z1 z2) (S.mul w1 w2)dot282,8007
+  let scale v x = mul v (make x)scale284,8128
+  let fold_left f a (x,y,z,w) = f (f (f (f a x) y) z) wfold_left286,8162
+  let fold_right f (x,y,z,w) a = f x (f y (f z (f w a)))fold_right287,8218
+module V4f = V4x(Float)V4f291,8281
+let v3_of_v4 v4 =v3_of_v4293,8306
+let v4_of_v3 v3 = v4_of_v3296,8381
+module M = structM299,8458
+  module V4 = structV4301,8477
+    let zero = null ()zero303,8514
+    let sqrt v = failwith "not implemented"sqrt304,8537
+    let inv v  = failwith "not implemented"inv305,8581
+  type vector = V4.tvector308,8632
+  module Impl : V with type scalar = vectorImpl310,8654
+                   and type tuple = vector * vector * vector * vector = V4x(V4)tuple311,8698
+  type t = Impl.t reft313,8779
+  let null () = ref (Impl.null ())null315,8802
+  let make x = let v = V4.make x in ref (Impl.make v)make316,8837
+  let get m i j =get318,8892
+  let set m i j v =set321,8940
+  let row m r =row324,9012
+  let col m c =col327,9090
+  let setrow m r v =setrow330,9125
+  let setcol m c v =setcol337,9249
+  let transposed m =transposed340,9296
+  let add m1 m2 = ref (Impl.add !m1 !m2)add343,9390
+  let sub m1 m2 = ref (Impl.sub !m1 !m2)sub344,9431
+  let mul m1 m2 = mul346,9473
+  let apply4 m v =apply4365,9848
+  let apply3 m v =apply3370,9963
+  let scaling x y z =scaling382,10272
+  let identity () =identity390,10393
+  let scale m x =scale393,10435
+  let translation x y z =translation396,10499
+  let perspective aFov aFov aNear aFar =perspective402,10621
+  let inverse m =inverse419,11220
+
+pathtracer.ml,0
+let color_add a b =color_add3,13
+module Make (Rng : Rng.S) = structMake9,199
+  class pathtracer aScene pathLengths aSeed =pathtracer11,235
+    method private mis aPdf = aPdfmis19,441
+    method private  mis2 aSamplePdf aOtherPdf =mis221,508
+    method private accIntersect pathLength ray lastSpecular lightPickProbaccIntersect24,636
+    method private accLightNoReflect pathLength ray isect bsdf lastSpecularaccLightNoReflect47,1646
+    method private nextEventEstimation bsdf pathLength lightCount lightPickProb nextEventEstimation74,2836
+    method private randomWalk color ray isect bsdf hitPoint pathWeight cont =randomWalk125,5037
+    method runIteration aIteration =runIteration148,6066
+  let renderer aScene pathLengths aSeed =renderer212,9312
+
+ray.ml,0
+type t = {t3,13
+let make org dir tmin = make9,164
+let origin r = r.orgorigin17,509
+let dir r = r.dirdir18,530
+let tmin r = r.tmintmin19,548
+let dump ppf ray =dump21,569
+
+renderer.ml,0
+class virtual abstractRenderer aScene (minPathLength,maxPathLength) = virtual3,13
+  method virtual runIteration : int -> unitvirtual15,343
+  method getFramebuffer =getFramebuffer17,388
+  method wasUsed =  mIterations > 0wasUsed24,628
+
+rng.ml,0
+module type S = sigS3,13
+    type tt5,34
+module Dummy : S = structDummy19,225
+  type t = unitt21,252
+  let make _ = ()make23,269
+  let getInt () = 0getInt25,288
+  let getFloat () = 0.getFloat26,308
+  let getVec2f () = V2f.null ()getVec2f27,331
+  let getVec3f () = V.null ()getVec3f28,363
+module MersenneTwister : S = structMersenneTwister32,399
+  type t = MersenneTwister.State.tt36,451
+  let make x =make38,487
+  let getInt s = MersenneTwister.Rng.int s max_intgetInt41,551
+  let getFloat s = MersenneTwister.Rng.rawdouble sgetFloat45,677
+  let getVec2f s = getVec2f46,728
+  let getVec3f s =getVec3f51,857
+type t =t59,978
+let each =each63,1018
+let name = functionname66,1060
+let acronym = functionacronym70,1154
+let of_acronym = functionof_acronym74,1234
+let default = MersenneTwisterdefault80,1367
+let getModule = functiongetModule82,1398
+
+scene.ml,0
+type boxMask =boxMask3,13
+module IntMap = Map.Make(struct type t = int let compare x y = x - y end) IntMap23,499
+type 'a t = {t25,575
+let geometry self = self.mGeometrygeometry37,902
+let camera self = self.mCameracamera38,937
+let materials self = self.mMaterialsmaterials39,968
+let lights self = self.mLightslights40,1005
+let material2Light self = self.mMaterial2Lightmaterial2Light41,1036
+let sphere self = self.mSpheresphere42,1083
+let background self = self.mBackgroundbackground43,1114
+let sceneName self = self.mSceneNamesceneName44,1153
+let sceneAcronym self = self.mSceneAcronymsceneAcronym45,1190
+let buildSphere scene =buildSphere47,1234
+let (&) l x = List.exists (fun y -> y = x) ll55,1543
+let intersect self aRay oResult =intersect57,1589
+let occluded self aPoint aDir aTMax =occluded69,1894
+let getMaterial self aMaterialIdx =getMaterial76,2133
+let getMaterialCount self =getMaterialCount79,2203
+let getLightPtr self aLightIdx =getLightPtr82,2263
+let getLightCount self =getLightCount86,2393
+let getBackground self =getBackground89,2447
+let getSceneName aBoxMask =getSceneName92,2492
+let cornellBox aResolution aBoxMask =cornellBox128,3813
+
+sceneSphere.ml,0
+type t = {t3,13
+let make v r = {make12,226
+let sceneCenter s = s.mSceneCentersceneCenter18,325
+let sceneRadius s = s.mSceneRadiussceneRadius19,360
+let invSceneRadiusSqr s = s.mInvSceneRadiusSqrinvSceneRadiusSqr20,395
+
+smallvcm.ml,0
+let get_num_procs () = 1 (* fixme *)get_num_procs4,25
+let render aConfig aSetup =render6,65
+let fullReport aConfig =fullReport64,2149
+let printRngWarning () = ()printRngWarning163,5579
+let main () =main166,5609
+
+utils.ml,0
+module GV = structGV2,2
+  module V   : Gmaths.Vec.S with type tuple_t = float * float * float * floatV3,21
+                             and type Scalar.t = float = Gmaths.VectorScalar4,99
+  module V3i : Gmaths.Vec.S with type tuple_t = int * int * intV3i5,170
+                             and type Scalar.t = int = Gmaths.Vec3.IntScalar6,234
+  module V2f : Gmaths.Vec.S with type tuple_t = float * floatV2f7,305
+                             and type Scalar.t = float = Gmaths.Vec2.FloatScalar8,367
+  module V2i : Gmaths.Vec.S with type tuple_t = int * intV2i9,442
+                             and type Scalar.t = int = Gmaths.Vec2.IntScalar10,500
+  module M   = Gmaths.Matrix.Mat4M11,571
+  module V4  = Gmaths.Vec4.FloatV412,605
+  let cmax v =cmax14,639
+  let v2lenSqr v = V2f.dot v vv2lenSqr18,709
+  let lenSqr v = V.dot v vlenSqr19,740
+  let tuple_of_v3 v =tuple_of_v321,768
+  let v3_of_tuple (x,y,z) =v3_of_tuple25,840
+  let v4_of_v3 v =v4_of_v328,895
+  let v3_of_v4 v =v3_of_v432,979
+  let v3_of_v2 v z =v3_of_v236,1063
+  let v2i_of_v3 v =v2i_of_v340,1147
+  let cross a b =cross44,1255
+  let m_apply3 m v =m_apply347,1298
+  let m_apply4 m v =m_apply450,1360
+  let vmin = V.minvmin53,1398
+  let vmax = V.maxvmax54,1417
+module MV = structMV58,1442
+  module V = V3fV60,1473
+  module V3i = Math.V3iV3i61,1490
+  module V2f = Math.V2fV2f62,1514
+  module V2i = Math.V2iV2i63,1538
+  module M = Math.MM64,1562
+  module V4 = V4fV465,1582
+  let vmax v1 v2 =vmax67,1601
+  let vmin v1 v2 =vmin70,1642
+  let cmax = V.maxcmax73,1683
+  let v2lenSqr v = V2f.dot v vv2lenSqr75,1703
+  let lenSqr v = V3f.lenSqr vlenSqr76,1734
+  let tuple_of_v3 v =tuple_of_v378,1765
+  let v3_of_tuple (x,y,z) =v3_of_tuple81,1805
+  let v3_of_v4 = Math.v3_of_v4v3_of_v484,1857
+  let v4_of_v3 = Math.v4_of_v3v4_of_v386,1889
+  let v3_of_v2 v z =v3_of_v288,1921
+  let v2i_of_v3 v =v2i_of_v392,2002
+  let cross a b =cross96,2107
+  let m_apply3 m v =m_apply399,2143
+  let m_apply4 m v =m_apply4102,2182
+let pi = acos(-1.0)pi109,2238
+let inv_pi = 1. /. piinv_pi111,2259
+let eps_cosine  = 1e-6eps_cosine113,2282
+let eps_ray     = 1e-3eps_ray114,2305
+let ifloor x = int_of_float @@ floor xifloor116,2329
+let sqr x = x *. xsqr118,2369
+let clamp a b v =clamp120,2389
+let luminance aRGB =luminance124,2447
+let v2i_of_v2f v =v2i_of_v2f129,2556
+let isZero v =isZero133,2665
+let notZero v =notZero137,2743
+let pprintf_v4 ppf v =pprintf_v4140,2778
+let pprintf_v ppf v =pprintf_v144,2892
+let dump_v str v =dump_v148,2997
+let dump_v4 v =dump_v4151,3069
+let dump_m str m =dump_m154,3108
+let fresnelDielectric aCosInc mIOR =fresnelDielectric166,3394
+let reflectLocal aVector =reflectLocal192,4076
+let samplePowerCosHemisphereW aSamples aPower =samplePowerCosHemisphereW200,4290
+let powerCosHemispherePdfW aNormal aDirection aPower =powerCosHemispherePdfW208,4670
+let sampleConcentricDisc aSamples =sampleConcentricDisc215,4936
+let concentricDiscPdfA () = inv_piconcentricDiscPdfA241,5839
+let sampleCosHemisphereW aSamples =sampleCosHemisphereW247,6087
+let cosHemispherePdfW aNormal aDirection =cosHemispherePdfW258,6435
+let sampleUniformTriangle aSamples =sampleUniformTriangle263,6587
+let sampleUniformSphereW aSamples =sampleUniformSphereW272,6856
+let uniformSpherePdfW () =uniformSpherePdfW284,7223
+let pdfWtoA aPdfW aDist aCosThere =pdfWtoA293,7526
+let pdfAtoW aPdfA aDist aCosThere =pdfAtoW296,7611
+
+vector.ml,0
+module type S =S2,2
+    type 'a tt5,23
+type 'a t = {mutable data : 'a array; mutable mx : int; default : 'a}t18,348
+let data v =data20,419
+let make i e = {data = Array.make i e; mx = 0; default = e}make23,441
+let length v = Array.length v.datalength24,501
+let max v = v.mxmax25,536
+let get v i = if i > v.mx then v.default else Array.get v.data iget26,553
+let resize v n =resize28,619
+let set v i e =set40,880
+let copy v = {v with data = Array.copy v.data}copy48,1034
+let blit v1 i1 v2 i2 n = blit49,1081
+
+vertexCM.ml,0
+type algorithmType =algorithmType29,968
+module Make (Rng : Rng.S) = structMake47,1565
+  type subPathState = {subPathState50,1693
+  let dumpPathState ppf s = dumpPathState63,2292
+  module PathVertex = structPathVertex66,2472
+    type t = {t68,2556
+    let getPosition self =getPosition82,3167
+  module PVParticle : Hashgrid.PARTICLE with type t = PathVertex.t = PathVertexPVParticle87,3223
+  type cameraVertex = (* Bsdf.falsetype *) PathVertex.tcameraVertex89,3304
+  type lightVertex = (* Bsdf.truetype *) PathVertex.tlightVertex90,3360
+  type cameraBSDF = (* Bsdf.falsetype *) Bsdf.tcameraBSDF92,3415
+  type lightBSDF = (* Bsdf.truetype *) Bsdf.tlightBSDF93,3463
+  let make_cameraBSDF = Bsdf.make falsemake_cameraBSDF95,3510
+  let make_lightBSDF  = Bsdf.make truemake_lightBSDF96,3550
+  class type vertexcm =vertexcm98,3590
+              method maxPathLength : intmaxPathLength100,3633
+              method minPathLength : intminPathLength101,3674
+              method mis : float -> floatmis102,3715
+              method misVcWeightFactor : floatmisVcWeightFactor103,3757
+              method ppm : boolppm104,3804
+              method scene : SceneSphere.t Scene.tscene105,3836
+  module RangeQuery (* : Hashgrid.QUERY with module Particle = PathVertex *) = structRangeQuery108,3904
+    module Particle = PVParticleParticle112,4187
+    type t = {t114,4221
+    let make aVertexCM aCameraPosition aCameraBsdf aCameraState = {make122,4414
+    let getPosition self = self.mCameraPositiongetPosition130,4675
+    let getContrib self = self.mContribgetContrib132,4724
+    let process self (aLightVertex : Particle.t) =process134,4765
+  module HG : Hashgrid.S with module Particle = PVParticleHG173,6862
+                          and type Particle.t = PathVertex.tParticle174,6921
+                          and type query = RangeQuery.tquery175,6982
+  class vertexCM (aScene : SceneSphere.t Scene.t) pathLengths aAlgorithm aRadiusFactor aRadiusAlpha aSeed =vertexCM178,7110
+    method maxPathLength = mMaxPathLengthmaxPathLength204,8585
+    method minPathLength = mMinPathLengthminPathLength205,8627
+    method misVcWeightFactor = mMisVcWeightFactormisVcWeightFactor206,8669
+    method ppm = mPpmppm207,8719
+    method scene = mScenescene208,8741
+    method mis aPdf =mis264,10690
+    method private generateCameraSample x y =generateCameraSample273,11010
+    method private getLightRadiance aLight aCameraState aHitpoint aRayDirection =getLightRadiance316,12971
+    method private directIllumination aCameraState aHitpoint aBsdf =directIllumination354,14692
+    method private connectVertices (aLightVertex : PathVertex.t) aCameraBsdf aCameraHitpoint (aCameraState : subPathState) =connectVertices443,18892
+    method private generateLightSample () =generateLightSample516,22170
+    method private connectToCamera aLightState aHitpoint aBsdf =connectToCamera571,24258
+    method private sampleScattering aBsdf aHitPoint aoState =sampleScattering643,27923
+    method private generateLightPaths pathCount =generateLightPaths725,31525
+    method runIteration aIteration =runIteration814,36118
+  let renderer aScene pathLengths aAlgorithm aRadiusFactor aRadiusAlpha aSeed =renderer1008,45729
