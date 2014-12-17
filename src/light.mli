@@ -42,6 +42,9 @@ module type Abstract =
       aHitPoint:V.t -> V.t * float * float
     val isFinite : t -> bool
     val isDelta : t -> bool
+
+    val dump : out_channel -> t -> unit
+
   end
 
 module AreaLight :
@@ -113,20 +116,29 @@ module BackgroundLight :
     val isFinite : 'a -> bool
     val isDelta : 'a -> bool
   end
+
 type t =
     AreaLight of AreaLight.t
   | DirectionalLight of DirectionalLight.t
   | PointLight of PointLight.t
   | BackgroundLight of BackgroundLight.t
+
 val illuminate :
   t ->
   SceneSphere.t ->
   V.t -> V2f.t -> bool -> bool -> illuminate_result
+
 val emit :
   t ->
   SceneSphere.t -> V2f.t -> V2f.t -> bool -> bool -> emit_result
+
 val getRadiance : t -> SceneSphere.t -> V.t -> 'a -> V.t * float
+
 val getRadianceEmission :
   t -> SceneSphere.t -> V.t -> 'a -> V.t * float * float
+
 val isFinite : t -> bool
+
 val isDelta : t -> bool
+
+val dump : out_channel -> t -> unit

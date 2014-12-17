@@ -530,6 +530,8 @@ module Make (Rng : Rng.S) = struct
       (* Printf.fprintf stderr "lightID = %d  rndDir = %a  rndPos = %a\n" lightID pprintf_v2 rndDirSamples pprintf_v2 rndPosSamples;*)
       let light = Scene.getLightPtr mScene lightID in
       
+      Printf.fprintf stderr "  light = %a\n" Light.dump light;
+
       (* float emissionPdfW, directPdfW, cosLight; *)
       let emit = 
         Light. emit light (Scene.sphere mScene) rndDirSamples rndPosSamples

@@ -93,6 +93,8 @@ module type Abstract = sig
     (* Whether the light has delta function (point, directional) or not (area) *)
     val isDelta : t -> bool
 
+    val dump : out_channel -> t -> unit
+
 end
 
 (* ////////////////////////////////////////////////////////////////////////// *)
@@ -198,6 +200,9 @@ module AreaLight = struct
     (* Whether the light has delta function (point, directional) or not (area) *)
     let isDelta self = false
 
+  let dump out self =
+    Printf.fprintf out "<Area Light>{p0 = %a; e1 = %a; e2 = %a; frame = %a; intensity = %a; invarea = %.03e}" pprintf_v self.p0 pprintf_v self.e1 pprintf_v self.e2 Frame.dump self.mFrame pprintf_v self.mIntensity self.mInvArea
+
 end
 
 
@@ -280,6 +285,9 @@ module DirectionalLight = struct
   (* Whether the light has delta function (point, directional) or not (area) *)
   let isDelta self = true
 
+  let dump out self =
+    Printf.fprintf out "<Directional Light>{frame = %a; intensity = %a}" Frame.dump self.mFrame pprintf_v self.mIntensity
+
 end
 
 (* ////////////////////////////////////////////////////////////////////////// *)
@@ -354,6 +362,9 @@ module PointLight = struct
     (* Whether the light has delta function (point, directional) or not (area) *)
     let isDelta self = true
 
+    let dump out self =
+      Printf.fprintf out "<Point Light>{position = %a; intensity = %a}" pprintf_v self.mPosition pprintf_v self.mIntensity
+
 end
 
 
@@ -370,13 +381,7 @@ module BackgroundLight  = struct
     mScale = s;
   }
 
-  let illuminate 
-        self
-        aSceneSphere
-        aReceivingPosition
-        aRndTuple
-        emissionPdfW
-        cosAtLight =
+  let illuminate self aSceneSphere aReceivingPosition aRndTuple emissionPdfW cosAtLight =
     
     (* Replace these two lines with image sampling *)
     let oDirectPdfW, oDirectionToLight = sampleUniformSphereW aRndTuple
@@ -400,13 +405,7 @@ module BackgroundLight  = struct
       radiance;
     }
 
-  let emit
-        self
-        aSceneSphere
-        aDirRndTuple
-        aPosRndTuple
-        directPdfA
-        cosThetaLight =
+  let emit self aSceneSphere aDirRndTuple aPosRndTuple directPdfA cosThetaLight =
 
     (* Replace these two lines with image sampling *)
     let directPdf, oDirection = sampleUniformSphereW aDirRndTuple 
@@ -417,10 +416,12 @@ module BackgroundLight  = struct
 
     let frame = Frame.setFromZ oDirection in
     {
-      oPosition = V.add (V.add (SceneSphere.sceneCenter aSceneSphere) 
-                               (V.scale oDirection (-.(SceneSphere.sceneRadius aSceneSphere))))
-                        (V.add (V.scale (Frame.binormal frame) (V2f.get xy 0))
-                               (V.scale (Frame.tangent frame) (V2f.get xy 1)));
+      oPosition = V.add (SceneSphere.sceneCenter aSceneSphere) 
+                        (V.scale 
+                           (V.add (V.opp oDirection)
+                                  (V.add (V.scale (Frame.binormal frame) (V2f.get xy 0))
+                                         (V.scale (Frame.tangent frame) (V2f.get xy 1))))
+                           (SceneSphere.sceneRadius aSceneSphere));
       
       (* oPosition = Vec3f(-1.109054f, -2.15064538f, -1.087019148f); *)
       oDirection;
@@ -436,22 +437,14 @@ module BackgroundLight  = struct
       energy = radiance;
     }
 
-  let getRadiance
-        self
-        aSceneSphere
-        aRayDirection
-        aHitPoint =
+  let getRadiance self aSceneSphere aRayDirection aHitPoint =
     (* Replace this with image lookup (proper pdf and such) *)
     (* use aRayDirection *)
     let directPdf   = uniformSpherePdfW ()
     and radiance    = V.scale self.mBackgroundColor self.mScale
     in radiance, directPdf
 
-  let getRadianceEmission
-        self
-        aSceneSphere
-        aRayDirection
-        aHitPoint =
+  let getRadianceEmission self aSceneSphere aRayDirection aHitPoint =
     (* Replace this with image lookup (proper pdf and such) *)
     (* use aRayDirection *)
     let directPdf   = uniformSpherePdfW ()
@@ -464,6 +457,9 @@ module BackgroundLight  = struct
                         
   (* Whether the light has delta function (point, directional) or not (area) *)
   let isDelta self = false
+
+  let dump out self =
+    Printf.fprintf out "<Background Light>{color = %a; scale = %.03e}" pprintf_v self.mBackgroundColor self.mScale
 
 end
 
@@ -508,4 +504,10 @@ let isDelta = function
   | DirectionalLight l -> DirectionalLight.isDelta l
   | PointLight l -> PointLight.isDelta l
   | BackgroundLight l -> BackgroundLight.isDelta l
+
+let dump out = function
+  | AreaLight l ->  AreaLight.dump out l
+  | DirectionalLight l -> DirectionalLight.dump out l
+  | PointLight l -> PointLight.dump out l
+  | BackgroundLight l -> BackgroundLight.dump out l
 
