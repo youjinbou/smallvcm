@@ -1,4 +1,5 @@
 type t = { mX : Utils.V.t; mY : Utils.V.t; mZ : Utils.V.t; }
+val dump : out_channel -> t -> unit
 val identity : unit -> t
 val make : Utils.V.t -> Utils.V.t -> Utils.V.t -> t
 val setFromZ : Utils.V.t -> t

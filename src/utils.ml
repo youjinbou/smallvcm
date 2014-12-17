@@ -1,3 +1,4 @@
+let (??) x = if x then 1 else 0
 
 module GV = struct
   module V   : Gmaths.Vec.S with type tuple_t = float * float * float * float
@@ -177,7 +178,7 @@ let dump_m str m =
 (* --------------------------------------------- *)
 
 let fresnelDielectric aCosInc mIOR =
-  if mIOR < 0.0
+  if mIOR < 0.
   then 1.
   else
     let aCosInc, etaIncOverEtaTrans =
@@ -198,7 +199,7 @@ let fresnelDielectric aCosInc mIOR =
     let rPerpendicular =
       (term2 -. cosTrans) /. (term2 +. cosTrans) in
 
-    0.5 *. (sqr rParallel) +. (sqr rPerpendicular)
+    0.5 *. ((sqr rParallel) +. (sqr rPerpendicular))
 
 
 (* reflect vector through (0,0,1) *)

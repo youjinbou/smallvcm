@@ -28,6 +28,7 @@ type t = {
   mReflectCoeff : float;
   mFixIsLight : bool;
 }
+val dump : out_channel -> t -> unit
 val invalid : unit -> t
 val isValid : t -> bool
 val isDelta : t -> bool

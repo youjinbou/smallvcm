@@ -15,3 +15,5 @@ val make :
   ?diffuse_refl:Utils.V.t ->
   ?phong_refl:Utils.V.t ->
   ?phong_exp:float -> ?mirror_refl:Utils.V.t -> ?ior:float -> unit -> t
+
+val dump : out_channel -> t -> unit

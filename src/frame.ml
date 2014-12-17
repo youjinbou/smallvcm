@@ -11,6 +11,9 @@ type t = {
     mZ : V.t;
 }
 
+let dump out f =
+  Printf.fprintf out "{%a ; %a ; %a}" pprintf_v f.mX pprintf_v f.mY pprintf_v f.mZ
+
 let identity () = {
   mX = unit0;
   mY = unit1;
@@ -22,8 +25,8 @@ let make mX mY mZ = {
   mY;
   mZ;
 }
-let setFromZ z =
 
+let setFromZ z =
   let mZ = V.normalize z in
   let tmpX = if (abs_float @@ V.get mZ 0) > 0.99
              then unit1 else unit0 in

@@ -66,6 +66,10 @@ let nullProbabilities = {
   refrProb  = 0.;
 }
 
+let dumpProbs out p =
+  Printf.fprintf out "{%.03e; %.03e; %.03e; %.03e}" p.diffProb p.phongProb p.reflProb p.refrProb
+
+
 type events = 
   | NONE
   | Diffuse
@@ -89,6 +93,9 @@ type (*'a *) t = {
    mReflectCoeff     : float;                  (*!< Fresnel reflection coefficient (for glass) *)
    mFixIsLight       : bool;
 }
+
+let dump out t =
+  Printf.fprintf out "{ matID = %d; mFrame = %a; mLocalDirFix = %a; mIsDelta = %d; mProbabilities = %a; mContinuationProb = %.03e; mReflectCoeff = %.03e }" t.mMaterialID Frame.dump t.mFrame pprintf_v t.mLocalDirFix ??(t.mIsDelta) dumpProbs t.mProbabilities t.mContinuationProb t.mReflectCoeff
 
 let invalid () = {
   mMaterialID       = -1;
@@ -464,7 +471,7 @@ let sample self aScene aRndTriplet =
                       }
                  else smpl
     | Reflect -> sampleReflect self mat aRndXY 0.
-    | Refract ->  sampleRefract self mat aRndXY 0.
+    | Refract -> sampleRefract self mat aRndXY 0.
     | _       -> assert false
   in
   let oCosThetaGen   = abs_float (V.get smpl.oLocalDirGen 2) in
@@ -477,12 +484,14 @@ let sample self aScene aRndTriplet =
 (* constructor *)
 (* ok *)
 let getComponentProbabilities self aMaterial (* oProbabilities *) =
+  Printf.fprintf stderr "getComponentProbabilities : %a %a\n" dump self Material.dump aMaterial;
   let mReflectCoeff = fresnelDielectric (V.get self.mLocalDirFix 2) (Material.ior aMaterial) in
+  Printf.fprintf stderr "  mReflectCoeff = %.03e\n" mReflectCoeff;
   let albedoDiffuse = albedoDiffuse aMaterial
   and albedoPhong   = albedoPhong aMaterial
   and albedoReflect = mReflectCoeff         *. albedoReflect aMaterial
   and albedoRefract = (1. -. mReflectCoeff) *. albedoRefract aMaterial in
-
+  Printf.fprintf stderr "  albedos = %.03e %.03e %.03e %.03e\n" albedoDiffuse albedoPhong albedoReflect albedoRefract;
   let totalAlbedo = albedoDiffuse +. albedoPhong +. albedoReflect +. albedoRefract in
   let mContinuationProb, probs =
     if totalAlbedo < 1e-9
@@ -514,13 +523,16 @@ let setup mFixIsLight aRay aIsect aScene =
   Printf.fprintf stderr "BSDF<%b>::Setup()\n" mFixIsLight;
   Printf.fprintf stderr "  aRay = %a\n" Ray.dump aRay;
   Printf.fprintf stderr "  aIsect = %a\n" Isect.dump aIsect;
+  Printf.fprintf stderr "  mFrame = %a\n" Frame.dump mFrame;
   let mLocalDirFix = Frame.toLocal mFrame (V.opp @@ Ray.dir aRay) in
+  Printf.fprintf stderr "  mLocalDirFix = %a\n" pprintf_v mLocalDirFix;
   (* reject rays that are too parallel with tangent plane *)
   let self = { (invalid ()) with mFrame; mLocalDirFix } in
   if (abs_float @@ V.get mLocalDirFix 2) < eps_cosine
   then self
   else 
     let mat = Scene.getMaterial aScene @@ Isect.matID aIsect in
+    Printf.fprintf stderr "  mat = %a\n" Material.dump mat;
     let self, mProbabilities = getComponentProbabilities self mat in
     let mIsDelta = (mProbabilities.diffProb = 0.) && (mProbabilities.phongProb = 0.) in
     (* now it becomes valid *)

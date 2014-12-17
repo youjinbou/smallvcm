@@ -39,3 +39,11 @@ let make ?diffuse_refl ?phong_refl ?(phong_exp=1.0) ?mirror_refl ?(ior=(-1.0)) (
     mMirrorReflectance  = nullop mirror_refl;
     mIOR                = ior;
   }
+
+let dump out m = 
+  Printf.fprintf out "{ diffuse = %a; phong = %a; exponent = %.03e; mirror = %a; ior = %.03e }" 
+                 pprintf_v m.mDiffuseReflectance
+                 pprintf_v m.mPhongReflectance
+                 m.mPhongExponent
+                 pprintf_v m.mMirrorReflectance
+                 m.mIOR

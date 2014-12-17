@@ -251,29 +251,31 @@ let cornellBox aResolution aBoxMask =
     (*  ////////////////////////////////////////////////////////////////////////// *)
     (* Light box at the ceiling *) 
     and lightbox = 
-      let box =
-        if light_box
-        then
-          (* Back wall *)
-          mkwall lb 2 1 0 3 5 5
-          (* Left wall *)
-          @ mkwall lb 4 7 3 0 5 5 (* 4 7 3 - 3 0 4 *)
-          (* Right wall *)
-          @ mkwall lb 6 5 1 2 5 5 (* 6 5 1 - 1 2 6 *)
-          (* Front wall *)
-          @ mkwall lb 4 5 6 7 5 5 (* 4 5 6 - 6 7 4 *)
+      if light_box then
+        let box =
+          if light_box
+          then
+            (* Back wall *)
+            mkwall lb 2 1 0 3 5 5
+            (* Left wall *)
+            @ mkwall lb 4 7 3 0 5 5 (* 4 7 3 - 3 0 4 *)
+            (* Right wall *)
+            @ mkwall lb 6 5 1 2 5 5 (* 6 5 1 - 1 2 6 *)
+            (* Front wall *)
+            @ mkwall lb 4 5 6 7 5 5 (* 4 5 6 - 6 7 4 *)
 
-        else []
-      and light =   
-        if(light_ceiling)
-        then
-          (* Floor *)
-          mkwall lb 5 4 0 1 0 1
-        else
-          (* Floor *)
-          mkwall lb 5 4 0 1 5 5 
-      in
-      box @ light in
+          else []
+        and light =   
+          if(light_ceiling)
+          then
+            (* Floor *)
+            mkwall lb 5 4 0 1 0 1
+          else
+            (* Floor *)
+            mkwall lb 5 4 0 1 5 5 
+        in
+        box @ light
+      else [] in
     List (floor @ ceiling @ side_walls @ central_ball @ small_balls @ lightbox)
   and mLights, mBackground, mMaterial2Light =
     let open Light in

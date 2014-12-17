@@ -1,4 +1,3 @@
-let (??) x = if x then 1 else 0
 
 open Utils
 
@@ -278,6 +277,8 @@ module Make (Rng : Rng.S) = struct
 
       (* Jitter pixel position *)
       let sample = V2f.add (V2f.of_tuple (float x, float y)) (Rng.getVec2f mRng) in
+
+      Printf.fprintf stderr "sample = %a\n" pprintf_v2 sample;
 
       (* Generate ray *)
       let primaryRay = Camera.generateRay camera sample in
@@ -646,15 +647,15 @@ module Make (Rng : Rng.S) = struct
     (* Samples a scattering direction camera/light sample according to BSDF. *)
     method private sampleScattering aBsdf aHitPoint aoState =
       let open Bsdf in
-
+      Printf.fprintf stderr "sampleScattering %a %a %a\n" Bsdf.dump aBsdf pprintf_v aHitPoint dumpPathState aoState;
       (* x,y for direction, z for component. No rescaling happens *)
       let rndTriplet  = Rng.getVec3f mRng in
       (*
         float bsdfDirPdfW, cosThetaOut;
         uint  sampledEvent;
        *)
-      let bsdfFactor = Bsdf.sample aBsdf mScene rndTriplet in
-
+      let bsdfFactor = Bsdf. sample aBsdf mScene rndTriplet in
+      
       if isZero bsdfFactor.oBSDF
       then None
       else 
@@ -665,17 +666,17 @@ module Make (Rng : Rng.S) = struct
         let bsdfDirPdfW = bsdfFactor.oPdfW in
         let bsdfRevPdfW = 
           if bsdfFactor.oSampledEvent <> Reflect && bsdfFactor.oSampledEvent <> Refract
-          then Bsdf.pdf aBsdf ~aEvalRevPdf:true mScene aoState.mDirection
+          then Bsdf.pdf aBsdf ~aEvalRevPdf:true mScene bsdfFactor.oWorldDirGen
           else bsdfDirPdfW in
-
+        Printf.fprintf stderr "bsdfDirPdfW = %.03e bsdfRevPdfW = %.03e\n" bsdfDirPdfW bsdfRevPdfW;
         (* Russian roulette *)
         let contProb = Bsdf.continuationProb aBsdf in
         if Rng.getFloat mRng > contProb 
         then None
         else
           let bsdfDirPdfW = bsdfDirPdfW *. contProb
-          and bsdfRevPdfW = bsdfRevPdfW *. contProb in
-          let cosThetaOut = bsdfFactor.oCosThetaGen in
+          and bsdfRevPdfW = bsdfRevPdfW *. contProb
+          and cosThetaOut = bsdfFactor.oCosThetaGen in
           (* Sub-path MIS quantities for the next vertex. Only partial - the
            * evaluation is completed when the actual hit point is known,
            * i.e. after tracing the ray, in the sub-path loop. *)
@@ -867,11 +868,11 @@ module Make (Rng : Rng.S) = struct
       
       (*//////////////////////////////////////////////////////////////////////
        * Trace camera path *)
-      let rec trace pathIdx color cameraState pathLength =
+      let rec trace pathIdx color cameraState =
         let () = Printf.fprintf stderr "cameraState = %a\n" dumpPathState cameraState in
         let ray = Ray.make cameraState.mOrigin cameraState.mDirection 0.
         and isect = Isect.default in
-        let () = Printf.fprintf stderr "pathLength = %d - ray = %a\n" pathLength Ray.dump ray in
+        let () = Printf.fprintf stderr "pathLength = %d - ray = %a\n" cameraState.mPathLength Ray.dump ray in
         (* Get radiance from environment *)
         match Scene.intersect mScene ray isect with
           None -> (
@@ -890,12 +891,14 @@ module Make (Rng : Rng.S) = struct
         | Some isect ->
            let () = Printf.fprintf stderr "camera intersect %a\n" Isect.dump isect in
            let hitPoint = V.add (Ray.origin ray) (V.scale (Ray.dir ray) (Isect.dist isect)) in
+           Printf.fprintf stderr "hitpoint = %a\n" pprintf_v hitPoint;
+
            let isect = Isect.set_dist isect ((Isect.dist isect) +. eps_ray) in
            let bsdf = make_cameraBSDF ray isect mScene in
            if not @@ Bsdf.isValid bsdf
            then let () = prerr_endline "notValid CameraBSDF" in color
            else
-             let () = prerr_endline "isValid CameraBSDF" in
+             let () = Printf.fprintf stderr "isValid CameraBSDF %a\n" Bsdf.dump bsdf in
              (* Update the MIS quantities, following the initialization in
               * GenerateLightSample() or SampleScattering(). Implement equations
               * [tech. rep. (31)-(33)] or [tech. rep. (34)-(36)], respectively. *)
@@ -903,22 +906,22 @@ module Make (Rng : Rng.S) = struct
              and mcos = self#mis (abs_float @@ Bsdf.cosThetaFix bsdf) in
              let cameraState = {
                cameraState with
-               mPathLength = pathLength;
                dVCM = dVCM /. mcos;
                dVC  = cameraState.dVC /. mcos;
                dVM  = cameraState.dVM /. mcos
              } in 
+             Printf.fprintf stderr "ncameraState = %a\n" dumpPathState cameraState;
              (* Light source has been hit; terminate afterwards, since
               * our light sources do not have reflective properties *)
              if (Isect.lightID isect) >= 0
-             then
+             then (
                let light = Scene.getLightPtr mScene (Isect.lightID isect) in
                if cameraState.mPathLength >= mMinPathLength
                then
                  V.add color(V.mul cameraState.mThroughput
                                    (self#getLightRadiance light cameraState hitPoint (Ray.dir ray)))
                else color
-             else
+             ) else
                (* Terminate if eye sub-path is too long for connections or merging *)
                if cameraState.mPathLength >= mMaxPathLength
                then color
@@ -938,6 +941,7 @@ module Make (Rng : Rng.S) = struct
                  let color =
                    if not @@ Bsdf.isDelta bsdf && mUseVC
                    then
+                     let () = prerr_endline "!bsdf.IsDelta() && mUseVC" in
                      (* For VC, each light sub-path is assigned to a particular eye
                       * sub-path, as in traditional BPT. It is also possible to
                       * connect to vertices from any light path, but MIS should
@@ -986,7 +990,7 @@ module Make (Rng : Rng.S) = struct
                  let cont color =
                    match self#sampleScattering bsdf hitPoint cameraState with
                      None -> color
-                   | Some cameraState -> trace pathIdx color cameraState (succ pathLength)
+                   | Some cameraState -> trace pathIdx color {cameraState with mPathLength = cameraState.mPathLength + 1}
                  in
                  match not @@ Bsdf.isDelta bsdf && mUseVM, mPpm with
                    true, true -> merging color
@@ -1000,7 +1004,7 @@ module Make (Rng : Rng.S) = struct
           let pathIdx = y * resX + x in
           Printf.fprintf stderr "Camera pathIdx = %d\n" pathIdx;
           let screenSample, cameraState = self#generateCameraSample x y in
-          let color = trace pathIdx (V.null ()) cameraState 1 in
+          let color = trace pathIdx (V.null ()) {cameraState with mPathLength = 1} in
           let () = dump_v "adding color" color in
           Framebuffer. addColor mFramebuffer (v2i_of_v2f screenSample) color;
           if x >= pred resX
