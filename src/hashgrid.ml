@@ -45,7 +45,7 @@ let getCellIndexFromCoord cellLength aCoord =
   let ( * ) a b = (a * b) land 0xffffffff in
   let x, y, z = V3i.to_tuple aCoord in
   let idx = ((x * 73856093) lxor (y * 19349663) lxor (z * 83492791)) mod cellLength in
-(*  Printf.fprintf stderr "getCellIndexFromCoord : {%d,%d,%d} -> %d [%d]\n" x y z idx cellLength; *)
+  debug "getCellIndexFromCoord : {%d,%d,%d} -> %d [%d]\n" x y z idx cellLength;
   if idx < 0 then idx + cellLength else idx
                            
 let getCellIndexFromPoint mBBoxMin mInvCellSize cellLength aPoint =
@@ -106,11 +106,11 @@ module Make (Query : QUERY) : S with module Particle = Query.Particle
     and mBBoxMin = !mBBoxMin in
     let indices = Vector.make particleCount 0 in
     let cellEnds = C.make aCellCount 0 in 
-    let () = Printf.fprintf stderr "Hashgrid.build : mBBoxMin = %a ; mBBoxMax = %a ; size = %d ; invCellSize = %e\n"
+    debug "Hashgrid.build : mBBoxMin = %a ; mBBoxMax = %a ; size = %d ; invCellSize = %e\n"
                    pprintf_v mBBoxMin
                    pprintf_v mBBoxMax
                    particleCount
-                   mInvCellSize in
+                   mInvCellSize;
     (* set mCellEnds[x] to number of particles within x *)
     for i = 0 to pred particleCount do
       let pos = Particle.getPosition (A.get aParticles i) in
@@ -131,21 +131,21 @@ module Make (Query : QUERY) : S with module Particle = Query.Particle
     for i = 0 to pred particleCount do
       let pos = Particle.getPosition (A.get aParticles i) in
       let idx = getCellIndexFromPoint mBBoxMin mInvCellSize (C.length cellEnds) pos in
-(*      Printf.fprintf stderr "idx = %d\n" idx; *)
+      debug "idx = %d\n" idx;
       if idx < 0 then (
-        Printf.fprintf stderr "Hashgrid.build : idx = %d, pos = %a\n" idx pprintf_v pos;
+        debug "Hashgrid.build : idx = %d, pos = %a\n" idx pprintf_v pos;
         exit (-1)
       );
       let targetIdx = C.get cellEnds idx in
-(*      Printf.fprintf stderr "targetIdx = %d\n" targetIdx;*)
+      debug "targetIdx = %d\n" targetIdx;
       C.set cellEnds idx (succ targetIdx);
       if targetIdx < 0 then (
-        Printf.fprintf stderr "Hashgrid.build : targetIdx = %d, idx = %d, pos = %a\n" targetIdx idx pprintf_v pos;
+        debug "Hashgrid.build : targetIdx = %d, idx = %d, pos = %a\n" targetIdx idx pprintf_v pos;
         exit (-1)
       );
       Vector.set indices targetIdx i
     done;
-(*    let () = prerr_endline "Hashgrid.build done" in *)
+    let () = debug "Hashgrid.build done\n" in
     let self = {
       mBBoxMin;
       mBBoxMax;
@@ -159,17 +159,17 @@ module Make (Query : QUERY) : S with module Particle = Query.Particle
     (* now mCellEnds[x] points to the index right after the last
      * element of cell x *)
     (* DEBUG *)
-    (* Printf.fprintf stderr "mCellEnds size = %d\n" @@ Array.length self.mCellEnds; *)
+    (* debug "mCellEnds size = %d\n" @@ Array.length self.mCellEnds; *)
     (* for i = 0 to pred particleCount do *)
     (*   let pos = Particle.getPosition (A.get aParticles i) in *)
     (*   let range = getCellRange self @@ getCellIndexFromPoint mBBoxMin mInvCellSize (Array.length self.mCellEnds) pos in *)
     (*   let x,y = V2i.to_tuple range in *)
-    (*   Printf.fprintf stderr "particle num : %d -> range %d %d\n" i x y; *)
+    (*   debug "particle num : %d -> range %d %d\n" i x y; *)
     (*   let rec loop x y = *)
     (*     x < y && ( *)
     (*       (A.get self.mIndices x = i) *)
     (*      || loop (succ x) y) *)
-    (*   in if not (loop x y) then Printf.fprintf stderr "Error at particle %d\n" i *)
+    (*   in if not (loop x y) then debug "Error at particle %d\n" i *)
     (* done; *)
     self
 

@@ -50,7 +50,7 @@ let buildSphere scene =
   let radius2 = lenSqr (V.sub bboxMax bboxMin) in
   let mSphere =
     SceneSphere.make (V.scale (V.add bboxMax bboxMin) 0.5) ((sqrt radius2) *. 0.5) in
-  Printf.fprintf stderr "buildSphere : bbmin = %a bbmax = %a radius = %.03e\n" pprintf_v bboxMin pprintf_v bboxMax radius2;
+  debug "buildSphere : bbmin = %a bbmax = %a radius = %.03e\n" pprintf_v bboxMin pprintf_v bboxMax radius2;
   { scene with mSphere }
 
 let (&) l x = List.exists (fun y -> y = x) l
@@ -146,6 +146,7 @@ let cornellBox aResolution aBoxMask =
                   (v3_of_tuple (3.73896e-4, 0.0542148, 0.998529))
                   aResolution
                   45.0 in
+
   (* Materials *)
   (* 0) light1, will only emit *)
   let light1_mat = Material.default

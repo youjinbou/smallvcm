@@ -32,7 +32,6 @@ let addColor self aSample aColor =
   then 
     let idx = x + y * self.mResX in
     let c = self.mColor.(idx) in
-(*    if notZero c then Printf.fprintf stderr "color already set at {%d,%d} (%d)\n" x y idx; *)
     self.mColor.(idx) <- V.add c aColor
   else Printf.fprintf stderr "sample out of range : {%i,%i}" x y
 

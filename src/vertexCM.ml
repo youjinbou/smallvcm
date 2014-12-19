@@ -26,7 +26,6 @@ open Utils
  * where ## is the equation number. 
  *)
 
-
 type algorithmType =
   (* light vertices contribute to camera,
    * No MIS weights (dVCM, dVM, dVC all ignored) *)
@@ -49,9 +48,9 @@ module Make (Rng : Rng.S) = struct
 
   (* The sole point of this structure is to make carrying around the ray baggage easier. *)
   type subPathState = {
-    mOrigin        : V.t;  (* Path origin *)
-    mDirection     : V.t;  (* Where to go next *)
-    mThroughput    : V.t;  (* Path throughput *)
+    mOrigin        : V.t;    (* Path origin *)
+    mDirection     : V.t;    (* Where to go next *)
+    mThroughput    : V.t;    (* Path throughput *)
     mPathLength    : int;    (* Number of path segments, including this *)
     mIsFiniteLight : bool;   (* Just generate by finite light *)
     mSpecularPath  : bool;   (* All scattering events so far were specular *)
@@ -258,7 +257,7 @@ module Make (Rng : Rng.S) = struct
         in init 0
       );
       mBaseRadius  <- aRadiusFactor *. SceneSphere.sceneRadius (Scene.sphere mScene);
-      Printf.fprintf stderr "VertexCM : mUseVM = %d mUseVC = %d mLightTraceOnly = %d mPpm = %d mRadiusAlpha = %.03e mBaseRadius = %.03e\n"
+      debug "VertexCM : mUseVM = %d mUseVC = %d mLightTraceOnly = %d mPpm = %d mRadiusAlpha = %.03e mBaseRadius = %.03e\n"
                      ??mUseVM ??mUseVC ??mLightTraceOnly ??mPpm mRadiusAlpha mBaseRadius
    )
 
@@ -278,7 +277,7 @@ module Make (Rng : Rng.S) = struct
       (* Jitter pixel position *)
       let sample = V2f.add (V2f.of_tuple (float x, float y)) (Rng.getVec2f mRng) in
 
-      Printf.fprintf stderr "sample = %a\n" pprintf_v2 sample;
+      debug "sample = %a\n" pprintf_v2 sample;
 
       (* Generate ray *)
       let primaryRay = Camera.generateRay camera sample in
@@ -527,10 +526,10 @@ module Make (Rng : Rng.S) = struct
       let lightID       = int_of_float @@ (Rng.getFloat mRng) *. (float lightCount)
       and rndDirSamples = Rng.getVec2f mRng
       and rndPosSamples = Rng.getVec2f mRng in
-      (* Printf.fprintf stderr "lightID = %d  rndDir = %a  rndPos = %a\n" lightID pprintf_v2 rndDirSamples pprintf_v2 rndPosSamples;*)
+      (* debug "lightID = %d  rndDir = %a  rndPos = %a\n" lightID pprintf_v2 rndDirSamples pprintf_v2 rndPosSamples;*)
       let light = Scene.getLightPtr mScene lightID in
       
-      Printf.fprintf stderr "  light = %a\n" Light.dump light;
+      debug "  light = %a\n" Light.dump light;
 
       (* float emissionPdfW, directPdfW, cosLight; *)
       let emit = 
@@ -576,10 +575,10 @@ module Make (Rng : Rng.S) = struct
      * framebuffer. Multiplies by throughput (obviously, as nothing is returned). *)
     method private connectToCamera aLightState aHitpoint aBsdf =
       let open Bsdf in
-      prerr_endline "connectToCamera";
+      debug "connectToCamera %a\n" pprintf_v aHitpoint;
       let camera    = Scene.camera mScene in
       let directionToCamera = V.sub (Camera.position camera) aHitpoint in
-
+      debug "directionToCamera = %a\n" pprintf_v directionToCamera;
       (* Check point is in front of camera *)
       let cosAtCamera = -.(V.dot (Camera.forward camera) directionToCamera) in
       if cosAtCamera <= 0.
@@ -587,6 +586,7 @@ module Make (Rng : Rng.S) = struct
       else
         (* Check it projects to the screen (and where) *)
         let imagePos = Camera.worldToRaster camera aHitpoint in
+        debug "imagePos = %a\n" pprinti_v2 imagePos;
         if not (Camera.checkRaster camera imagePos)
         then ()
         else 
@@ -594,7 +594,7 @@ module Make (Rng : Rng.S) = struct
           let distEye2 = lenSqr directionToCamera in
           let distance = sqrt distEye2 in
           let directionToCamera = V.scale directionToCamera (1./.distance) in
-
+          
           (* Get the BSDF *)
           (* float cosToCamera, bsdfDirPdfW, bsdfRevPdfW; *)
           let bsdfFactor = Bsdf.evaluate aBsdf mScene directionToCamera in
@@ -642,14 +642,14 @@ module Make (Rng : Rng.S) = struct
             if not @@ isZero contrib
             then if Scene.occluded mScene aHitpoint directionToCamera distance 
                  then ()
-                 else let () = Printf.fprintf stderr "adding camera color : %a\n" pprintf_v contrib in 
+                 else let () = debug "adding camera color : %a\n" pprintf_v contrib in 
                       Framebuffer.addColor mFramebuffer imagePos contrib
             else ()
 
     (* Samples a scattering direction camera/light sample according to BSDF. *)
     method private sampleScattering aBsdf aHitPoint aoState =
       let open Bsdf in
-      Printf.fprintf stderr "sampleScattering %a %a %a\n" Bsdf.dump aBsdf pprintf_v aHitPoint dumpPathState aoState;
+      debug "sampleScattering %a %a %a\n" Bsdf.dump aBsdf pprintf_v aHitPoint dumpPathState aoState;
       (* x,y for direction, z for component. No rescaling happens *)
       let rndTriplet  = Rng.getVec3f mRng in
       (*
@@ -670,7 +670,7 @@ module Make (Rng : Rng.S) = struct
           if bsdfFactor.oSampledEvent <> Reflect && bsdfFactor.oSampledEvent <> Refract
           then Bsdf.pdf aBsdf ~aEvalRevPdf:true mScene bsdfFactor.oWorldDirGen
           else bsdfDirPdfW in
-        Printf.fprintf stderr "bsdfDirPdfW = %.03e bsdfRevPdfW = %.03e\n" bsdfDirPdfW bsdfRevPdfW;
+        debug "bsdfDirPdfW = %.03e bsdfRevPdfW = %.03e\n" bsdfDirPdfW bsdfRevPdfW;
         (* Russian roulette *)
         let contProb = Bsdf.continuationProb aBsdf in
         if Rng.getFloat mRng > contProb 
@@ -730,24 +730,24 @@ module Make (Rng : Rng.S) = struct
      * Generate light paths
      *////////////////////////////////////////////////////////////////////// *)
     method private generateLightPaths pathCount =
-      prerr_endline "generateLightPaths"; 
+      debug "generateLightPaths\n"; 
       (*////////////////////////////////////////////////////////////////////////
        * Trace light path *)
       let rec traceLightPath lightVertices lightVertices_size lightState pathLength =
-        Printf.fprintf stderr "lightState : %a\n" dumpPathState lightState;
+        debug "lightState : %a\n" dumpPathState lightState;
         let ray = Ray.make lightState.mOrigin lightState.mDirection 0.
         and isect = Isect.default in
-        Printf.fprintf stderr "ray : %a\n" Ray.dump ray;
+        debug "ray : %a\n" Ray.dump ray;
         match Scene.intersect mScene ray isect with
-          None       -> (prerr_endline "no intersect"; lightVertices, lightVertices_size)
+          None       -> (debug "no intersect\n"; lightVertices, lightVertices_size)
         | Some isect ->
-           Printf.fprintf stderr "isect : %a\n" Isect.dump isect;
+           debug "isect : %a\n" Isect.dump isect;
            let hitPoint = V.add (Ray.origin ray) (V.scale (Ray.dir ray) (Isect.dist isect)) in
            let isect = Isect.set_dist isect ((Isect.dist isect) +. eps_ray) in
            let bsdf = make_lightBSDF ray isect mScene in
            if not @@ Bsdf.isValid bsdf 
            then
-             let () = prerr_endline "notValid bsdf" in
+             let () = debug "notValid bsdf\n" in
              lightVertices, lightVertices_size 
            else
              (* Update the MIS quantities before storing them at the vertex.
@@ -774,7 +774,7 @@ module Make (Rng : Rng.S) = struct
                 * vertex connections and merging *)
                if (not @@ Bsdf.isDelta bsdf) && (mUseVC || mUseVM)
                then
-                 let () = Printf.fprintf stderr "!(Bsdf.isDelta bsdf {%d}) && (mUseVC {%d} || mUseVM {%d})\n"
+                 let () = debug "!(Bsdf.isDelta bsdf {%d}) && (mUseVC {%d} || mUseVM {%d})\n"
                                          ??(Bsdf.isDelta bsdf) ??mUseVC ??mUseVM in
                  let lightVertex = 
                    let open PathVertex in {
@@ -788,7 +788,7 @@ module Make (Rng : Rng.S) = struct
                      dVM  = lightState.dVM;
                    } in lightVertex::lightVertices, succ lightVertices_size 
                else 
-                 let () = Printf.fprintf stderr "NOT (!(Bsdf.isDelta bsdf {%d}) && (mUseVC {%d} || mUseVM {%d}))\n"
+                 let () = debug "NOT (!(Bsdf.isDelta bsdf {%d}) && (mUseVC {%d} || mUseVM {%d}))\n"
                                          ??(Bsdf.isDelta bsdf) ??mUseVC ??mUseVM in
                  lightVertices, lightVertices_size 
              in
@@ -806,11 +806,11 @@ module Make (Rng : Rng.S) = struct
                | Some lightState -> traceLightPath lightVertices lightVertices_size lightState (succ pathLength)
       in 
       let rec loop pathIdx lightVertices lightVertices_size =
-        let () = Printf.fprintf stderr "generateLightPaths loop : pathIdx = %d\n" pathIdx in
+        let () = debug "generateLightPaths loop : pathIdx = %d\n" pathIdx in
         let lightState = self#generateLightSample () in
         let lightVertices, lightVertices_size = 
           traceLightPath lightVertices lightVertices_size lightState 1 in
-        Printf.fprintf stderr "traceLightPath -> size = %d\n" lightVertices_size;
+        debug "traceLightPath -> size = %d\n" lightVertices_size;
         Vector.set mPathEnds pathIdx lightVertices_size;
         if pathIdx >= pred pathCount
         then lightVertices
@@ -836,7 +836,7 @@ module Make (Rng : Rng.S) = struct
       (* Purely for numeric stability *)
       let radius = max radius 1e-7 in
       let radiusSqr = sqr radius in
-      Printf.fprintf stderr "VertexCM.runIteration mBaseRadius = %.03e mRadiusAlpha = %.03e radius = %.03e\n" mBaseRadius mRadiusAlpha radius;
+      debug "VertexCM.runIteration mBaseRadius = %.03e mRadiusAlpha = %.03e radius = %.03e\n" mBaseRadius mRadiusAlpha radius;
       (* Factor used to normalise vertex merging contribution.
        * We divide the summed up energy by disk radius and number of light paths *)
       mVmNormalization <- 1. /. (radiusSqr *. pi *. mLightSubPathCount);
@@ -871,14 +871,14 @@ module Make (Rng : Rng.S) = struct
       (*//////////////////////////////////////////////////////////////////////
        * Trace camera path *)
       let rec trace pathIdx color cameraState =
-        let () = Printf.fprintf stderr "cameraState = %a\n" dumpPathState cameraState in
+        let () = debug "cameraState = %a\n" dumpPathState cameraState in
         let ray = Ray.make cameraState.mOrigin cameraState.mDirection 0.
         and isect = Isect.default in
-        let () = Printf.fprintf stderr "pathLength = %d - ray = %a\n" cameraState.mPathLength Ray.dump ray in
+        let () = debug "pathLength = %d - ray = %a\n" cameraState.mPathLength Ray.dump ray in
         (* Get radiance from environment *)
         match Scene.intersect mScene ray isect with
           None -> (
-          let () = prerr_endline "no camera intersect" in
+          let () = debug "no camera intersect\n" in
           match Scene.getBackground mScene with
             Some background -> (
             if cameraState.mPathLength >= mMinPathLength
@@ -891,16 +891,16 @@ module Make (Rng : Rng.S) = struct
           | None -> color
         )
         | Some isect ->
-           let () = Printf.fprintf stderr "camera intersect %a\n" Isect.dump isect in
+           let () = debug "camera intersect %a\n" Isect.dump isect in
            let hitPoint = V.add (Ray.origin ray) (V.scale (Ray.dir ray) (Isect.dist isect)) in
-           Printf.fprintf stderr "hitpoint = %a\n" pprintf_v hitPoint;
+           debug "hitpoint = %a\n" pprintf_v hitPoint;
 
            let isect = Isect.set_dist isect ((Isect.dist isect) +. eps_ray) in
            let bsdf = make_cameraBSDF ray isect mScene in
            if not @@ Bsdf.isValid bsdf
-           then let () = prerr_endline "notValid CameraBSDF" in color
+           then let () = debug "notValid CameraBSDF\n" in color
            else
-             let () = Printf.fprintf stderr "isValid CameraBSDF %a\n" Bsdf.dump bsdf in
+             let () = debug "isValid CameraBSDF %a\n" Bsdf.dump bsdf in
              (* Update the MIS quantities, following the initialization in
               * GenerateLightSample() or SampleScattering(). Implement equations
               * [tech. rep. (31)-(33)] or [tech. rep. (34)-(36)], respectively. *)
@@ -912,7 +912,7 @@ module Make (Rng : Rng.S) = struct
                dVC  = cameraState.dVC /. mcos;
                dVM  = cameraState.dVM /. mcos
              } in 
-             Printf.fprintf stderr "ncameraState = %a\n" dumpPathState cameraState;
+             debug "ncameraState = %a\n" dumpPathState cameraState;
              (* Light source has been hit; terminate afterwards, since
               * our light sources do not have reflective properties *)
              if (Isect.lightID isect) >= 0
@@ -943,7 +943,7 @@ module Make (Rng : Rng.S) = struct
                  let color =
                    if not @@ Bsdf.isDelta bsdf && mUseVC
                    then
-                     let () = prerr_endline "!bsdf.IsDelta() && mUseVC" in
+                     let () = debug "!bsdf.IsDelta() && mUseVC\n" in
                      (* For VC, each light sub-path is assigned to a particular eye
                       * sub-path, as in traditional BPT. It is also possible to
                       * connect to vertices from any light path, but MIS should
@@ -978,7 +978,7 @@ module Make (Rng : Rng.S) = struct
                  (*//////////////////////////////////////////////////////////////
                   * Vertex merging: Merge with light vertices *)
                  let merging color =
-                   prerr_endline "vertex merging";
+                   debug "vertex merging\n";
                    match mHashGrid with
                      None -> assert false
                    | Some mHashGrid ->
@@ -1004,10 +1004,10 @@ module Make (Rng : Rng.S) = struct
         if x < resX && y < resY && not mLightTraceOnly
         then
           let pathIdx = y * resX + x in
-          Printf.fprintf stderr "Camera pathIdx = %d\n" pathIdx;
+          debug "Camera pathIdx = %d\n" pathIdx;
           let screenSample, cameraState = self#generateCameraSample x y in
           let color = trace pathIdx (V.null ()) {cameraState with mPathLength = 1} in
-          let () = dump_v "adding color" color in
+          let () = debug "adding color : %a\n" pprintf_v color in
           Framebuffer. addColor mFramebuffer (v2i_of_v2f screenSample) color;
           if x >= pred resX
           then render 0 (succ y)

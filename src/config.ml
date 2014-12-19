@@ -122,7 +122,7 @@ let default = {
 
 (* Utility function, essentially a renderer factory *)
 let createRenderer (aConfig : ('a,'f) t) aSetup aSeed =
-(*  prerr_endline @@ "createRenderer : [" ^ string_of_int aConfig.mMinPathLength ^ ","  ^ string_of_int aConfig.mMaxPathLength ^ "]"; *)
+  debug "createRenderer : [%d,%d]\n" aConfig.mMinPathLength aConfig.mMaxPathLength;
   let open Algorithm in
   let scene = aSetup.mScene in
   let pathLengths = aConfig.mMinPathLength, aConfig.mMaxPathLength in
@@ -181,6 +181,7 @@ let parseCommandLine () =
     then sceneConfig := sceneConfigs.(i)
     else raise (Bad "invalid scene")
   and set_rng i = conf := { !conf with mRng = Rng.of_acronym i}
+  and set_cores i = conf := { !conf with mNumThreads = i }
   in
   let cmdline_specs =
     let module A = Algorithm in
@@ -190,6 +191,8 @@ let parseCommandLine () =
          ^ "(availables:\n" ^
            (List.fold_left (fun s i -> s ^ " " ^ A.acronym i ^ " = " ^ A.name i ^ "\n") "" A.each)
             ^ "default: " ^ A.acronym default_setup.mAlgorithm ^ " )";
+        "-c", Int set_cores,
+        " Selects the number of threads (default "^ string_of_int default.mNumThreads ^")";
         "-s", Int set_scene,
         " Selects the scene (default 0)";
         "-t", Int (fun i -> conf := { !conf with mMaxTime = float i }),

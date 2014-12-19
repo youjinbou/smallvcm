@@ -1,6 +1,8 @@
 PKG gmaths
 PKG oUnit
+PKG threads
 
 S src
 
 B _build/src
+B +threads

@@ -22,7 +22,8 @@
  * (The above is MIT License: http://en.wikipedia.org/wiki/MIT_License)
  *)
 
-let pi = 3.14159265358979
+(* let pi = 3.14159265358979 *)
+let pi = acos (-1.0)
 let inv_pi = 1. /. pi
 
 

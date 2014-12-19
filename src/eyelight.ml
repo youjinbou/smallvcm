@@ -45,7 +45,7 @@ module Make (Rng : Rng.S) = struct
         let sample =
           V2f.add (V2f.of_tuple (float x, float y))
                   (if aIteration = 1 then V2f.make (0.5) else Rng.getVec2f mRng) in
-        (* Printf.fprintf stderr "sample : {%f,%f}\n" (V2f.get sample 0) (V2f.get sample 1); *)
+        debug "sample : %a\n" pprintf_v2 sample;
         let ray = Camera.generateRay (Scene.camera mScene) sample in
         let isect = Isect.default in
         match Scene.intersect mScene ray isect with

@@ -44,14 +44,14 @@ module Triangle = struct
   let intersectP = intersect
 
   let growBB triangle (aoBBoxMin,aoBBoxMax) =
-    (* Printf.fprintf stderr "Triangle::growBBox(%d) : [%a,%a]" triangle.matID pprintf_v aoBBoxMin pprintf_v aoBBoxMax; *)
+    debug "Triangle::growBBox(%d) : [%a,%a]" triangle.matID pprintf_v aoBBoxMin pprintf_v aoBBoxMax;
     let p1, p2, p3 = triangle.p in
     let bmin, bmax =
       vmin p1 @@ vmin p2 @@ vmin p3 aoBBoxMin,
       vmax p1 @@ vmax p2 @@ vmax p3 aoBBoxMax
     in
-(*    Printf.fprintf stderr " => [%a,%a]\n" pprintf_v bmin pprintf_v bmax;
-    Printf.fprintf stderr "< %a , %a , %a >\n" pprintf_v p1 pprintf_v p2 pprintf_v p3; *)
+    debug " => [%a,%a]\n" pprintf_v bmin pprintf_v bmax;
+    debug "< %a , %a , %a >\n" pprintf_v p1 pprintf_v p2 pprintf_v p3;
     bmin,bmax
 
   let dump {p = (p1,p2,p3);_} =
@@ -103,7 +103,7 @@ module Sphere = struct
   let intersectP = intersect
 
   let growBB sphere (aoBBoxMin,aoBBoxMax) =
-    (* Printf.fprintf stderr "Sphere::growBBox(%d) : [%a,%a]" sphere.matID pprintf_v aoBBoxMin pprintf_v aoBBoxMax; *)
+    debug "Sphere::growBBox(%d) : [%a,%a]" sphere.matID pprintf_v aoBBoxMin pprintf_v aoBBoxMax;
     let p = sphere.center
     and half = V.make sphere.radius in
     let get_half v i =
@@ -113,7 +113,7 @@ module Sphere = struct
     let rec check i bmin bmax =
       if i >= 8 
       then (
-(*        Printf.fprintf stderr " => [%a,%a]\n" pprintf_v bmin pprintf_v bmax; *)
+        debug " => [%a,%a]\n" pprintf_v bmin pprintf_v bmax;
         bmin,bmax
       )
       else 

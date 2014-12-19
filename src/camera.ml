@@ -47,30 +47,27 @@ let make aPosition aForward aUp aResolution (aHorizontalFOV : float) =
                  V.dot up aPosition,
                  V.dot left aPosition,
                  V.dot nforward aPosition) in
-(*
-  dump_v "aPosition" aPosition;
-  dump_v "forward" forward;
-  dump_v "left" left;
-  dump_v "up"  up;
-  dump_v "pos" pos;
- *)
+  
+  debug "aPosition : %a\n" pprintf_v aPosition;
+  debug "forward   : %a\n" pprintf_v forward;
+  debug "left      : %a\n" pprintf_v left;
+  debug "up        : %a\n"  pprintf_v up;
+  debug "pos       : %a\n" pprintf_v pos;
+
   let worldToCamera = M.identity () in
   M.setrow worldToCamera 0 (v4_of_v3 up       (-.(V.get pos 0)));
   M.setrow worldToCamera 1 (v4_of_v3 left     (-.(V.get pos 1)));
   M.setrow worldToCamera 2 (v4_of_v3 nforward (-.(V.get pos 2)));
-(*  dump_m "worldToCamera" worldToCamera; 
-  prerr_newline (); *)
+  debug "worldToCamera\n%a\n" pprintf_m worldToCamera; 
+
   let perspective    = perspective aHorizontalFOV  0.1 10000. in
   let worldToNScreen = M.mul perspective worldToCamera in
   let nscreenToWorld = M.inverse worldToNScreen in
-(*
-  dump_m "perspective" perspective;
-  prerr_newline ();
-  dump_m "worldToNScreen" worldToNScreen;
-  prerr_newline ();
-  dump_m "nscreenToWorld" nscreenToWorld;
-  prerr_newline ();
- *)
+
+  debug "perspective\n%a\n" pprintf_m perspective;
+  debug "worldToNScreen\n%a\n" pprintf_m worldToNScreen;
+  debug "nscreenToWorld\n%a\n" pprintf_m nscreenToWorld;
+
   let tanHalfAngle   = tan (aHorizontalFOV *. pi /. 360.) in
   let translation    = M.translation 1. 1. 0.0 
   and scaling        = M.scaling (resX *. 0.5) (resY *. 0.5) 0.0 
@@ -81,10 +78,11 @@ let make aPosition aForward aUp aResolution (aHorizontalFOV : float) =
   and mRasterToWorld  = 
     M.mul nscreenToWorld (M.mul invtranslation invscaling)
   in
-(*
-  dump_m "mWorldToRaster" mWorldToRaster; prerr_newline ();
-  dump_m "mRasterToWorld" mRasterToWorld; prerr_newline ();
- *)
+  debug "translation\n%a\n" pprintf_m translation;
+  debug "scaling\n%a\n" pprintf_m scaling;
+  debug "mWorldToRaster\n%a\n" pprintf_m mWorldToRaster;
+  debug "mRasterToWorld\n%a\n" pprintf_m mRasterToWorld;
+
   {
     mPosition       = aPosition;
     mForward        = forward;
@@ -107,6 +105,7 @@ let rasterToWorld camera aRasterXY : V.t =
 
 let worldToRaster camera aWorldPos =
   let temp = m_apply3 camera.mWorldToRaster aWorldPos in
+  debug "m_apply3 %a => %a\n" pprintf_v aWorldPos pprintf_v temp;
   v2i_of_v3 temp
 
 (* returns false when raster position is outside screen space *)

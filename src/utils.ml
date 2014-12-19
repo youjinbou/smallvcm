@@ -1,8 +1,17 @@
 let (??) x = if x then 1 else 0
 
+let debug fmt = Printf.ifprintf stderr fmt
+
+
 module GV = struct
-  module V   : Gmaths.Vec.S with type tuple_t = float * float * float * float
-                             and type Scalar.t = float = Gmaths.Vector
+
+  module V  = struct
+
+    include Gmaths.Vector
+                                                           
+    let set v i k = set v i k; v 
+
+  end
   module V3i : Gmaths.Vec.S with type tuple_t = int * int * int
                              and type Scalar.t = int = Gmaths.Vec3.Int
   module V2f : Gmaths.Vec.S with type tuple_t = float * float
@@ -31,7 +40,7 @@ module GV = struct
     V4.of_tuple (x,y,z,1.)
 
   let v3_of_v4 v =
-    let x, y, z, _ = V4.to_tuple v in
+    let x, y, z, _ = V.to_tuple v in
     V.of_tuple (x,y,z,1.)
 
   let v3_of_v2 v z =
@@ -154,13 +163,24 @@ let pprintf_v out v =
   let x,y,z = tuple_of_v3 v in
     Printf.fprintf out "{%.03e,%.03e,%.03e}" x y z
 
+let pprinti_v2 out v =
+  let x,y = V2i.to_tuple v in
+    Printf.fprintf out "{%d,%d}" x y
 
 let pprinti_v out v =
   let x,y,z = V3i.to_tuple v in
     Printf.fprintf out "{%d,%d,%d}" x y z
 
-let dump_v str v =
-  Printf.fprintf stderr "%s : %a\n" str pprintf_v v
+let pprintf_m out m =
+  let pprintf out v =
+    let x,y,z,w = V4.to_tuple v in
+    Printf.fprintf out "| %.03e %.03e %.03e %.03e |" x y z w
+  in
+  Printf.fprintf out "%a\n%a\n%a\n%a"
+                 pprintf (M.row m 0)
+                 pprintf (M.row m 1)
+                 pprintf (M.row m 2)
+                 pprintf (M.row m 3)
 
 let dump_v4 v =
   pprintf_v4 stderr v
@@ -174,6 +194,7 @@ let dump_m str m =
   for i = 0 to 3 do
     dump_col (M.row m i)
   done
+
 
 (* --------------------------------------------- *)
 

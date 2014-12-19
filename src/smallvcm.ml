@@ -2,7 +2,17 @@ open Utils
 open Config
 
 let get_num_procs () = 1 (* fixme *)
-  
+
+let get_iter, succ_iter =
+  let i = ref 0 in
+  let get () =
+      let r = !i in
+      r
+    and incr () =
+      incr i;
+  in get, incr
+    
+
 let render aConfig aSetup =
   (* Create 1 renderer per thread *)
   let renderers = 
@@ -10,34 +20,52 @@ let render aConfig aSetup =
                (fun i -> Config.createRenderer aConfig aSetup (aConfig.mBaseSeed + i))
   in
   let startT = Sys.time () in
-  let iter, endT = 
-    (* Rendering loop, when we have any time limit, use time-based loop,
+  (* Rendering loop, when we have any time limit, use time-based loop,
     // otherwise go with required iterations *)
-    if aConfig.mMaxTime > 0.
+  (* Time based loop *)
+  let rec timed_loop id renderer iter =
+    let time = Sys.time () in
+    if time < startT +. aConfig.mMaxTime
     then 
-        (* Time based loop *)
-(* #pragma omp parallel *)
-      let rec loop renderer iter =
-        let time = Sys.time () in
-        if time < startT +. aConfig.mMaxTime
-        then 
-          let () = renderer#runIteration iter in
-          loop renderer (succ iter)
-        else iter, time
-      in loop renderers.(0) 0
+      let () = renderer#runIteration iter in
+      timed_loop id renderer @@ succ iter
+    else iter, time
                                   
-    else
-      (* Iterations based loop *)
-(* #pragma omp parallel for *)
-      let () =
-        for iter= 0 to pred aConfig.mIterations do
-          renderers.(0)#runIteration iter
-        done
-      in aConfig.mIterations, Sys.time ()
-
+  (* Iterations based loop *)
+  and iter_loop id renderer iter =
+(*    let get_iter () = iter
+    and succ_iter () = () in *)
+    if get_iter () < aConfig.mIterations
+    then (
+      Printf.printf "thread %d new iteration\n" id;
+      flush stdout;
+      succ_iter ();
+      renderer#runIteration @@ get_iter ();
+      iter_loop id renderer @@ succ iter
+    ) else iter, Sys.time ()
   in
-  (* Accumulate from all renderers into a common framebuffer *)
-  (*  usedRenderers = 0; *)
+  let res, endT =
+    let result = Array.make aConfig.mNumThreads (0,0.0) in
+    let task_f =
+      if aConfig.mMaxTime > 0.0
+      then timed_loop
+      else iter_loop in
+    let task rank renderer iter () =
+      let id = Thread.id @@ Thread.self () in
+      Printf.printf "thread %d start\n" id;
+      Thread.yield ();
+      result.(rank) <- task_f id renderer iter;
+    in
+    if aConfig.mNumThreads > 1 then
+      let ths = Array.mapi (fun i r -> Thread.create (task i r 0) ()) renderers in
+      let res = Array.mapi (fun i t -> Thread.join t; Printf.printf "thread %d done\n" i) ths in
+      res, Sys.time ()
+    else
+      let res = Array.init 1 (fun i -> task i renderers.(0) 0 ()) in
+      res, Sys.time ()
+  in
+    (* Accumulate from all renderers into a common framebuffer *)
+    (*  usedRenderers = 0; *)
 
     (* With very low number of iterations and high number of threads
      * not all created renderers had to have been used.
@@ -55,7 +83,7 @@ let render aConfig aSetup =
     Some buffer ->
     (* Scale framebuffer by the number of used renderers *)
     Framebuffer.scale buffer (1. /. float usedRenderers);
-    {aConfig with mFramebuffer = buffer}, iter, endT -. startT
+    {aConfig with mFramebuffer = buffer}, (get_iter ()), endT -. startT
   | None -> assert false
 
 (*////////////////////////////////////////////////////////////////////////
@@ -123,7 +151,7 @@ let nfullReport aConfig =
           config with mSetup = Setup setup
         } in
         
-        printf "Running %s... " (Config.Algorithm.name algID);
+        printf "Running %s...\n" (Config.Algorithm.name algID);
         flush stdout;
         let config, numIterations, time = render config setup in
         printf "done in %.2f s\n" time;
@@ -189,7 +217,7 @@ let main () =
     else printf "Target:  %d iteration(s)\n" config.mIterations;
 
     (* Renders the image *)
-    printf "Running: %s... " (Algorithm.name setup.mAlgorithm);
+    printf "Running: %s...\n" (Algorithm.name setup.mAlgorithm);
     flush stdout;
     let config, iter, time = render config setup in
     printf "done in %.2f s\n" time;
